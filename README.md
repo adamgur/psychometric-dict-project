@@ -1,22 +1,27 @@
-# Vocabulary Learning Tool Server
+# Psychometric Dictionary Project
 
-A simple web-based vocabulary learning tool for psychometric exam preparation. The project uses a FastAPI backend (served with Uvicorn) to route two HTML pages, each providing a vocabulary app with pure JavaScript—one for English and one for Hebrew.
+A vocabulary learning tool for psychometric exam preparation. This project has been migrated from using localStorage to using JSON files for data storage.
 
 ## Features
 - English-to-Hebrew and Hebrew-to-English vocabulary practice
-- Two separate HTML apps: `/english` and `/hebrew` routes
-- Users can edit the dictionary directly via the app UI
-- All changes are saved to the browser's local storage for persistence
-- Pure JavaScript frontends (no frameworks)
+- Two separate HTML apps: Hebrew and English
+- Users can edit the dictionary via the app UI
+- All changes can be exported as JSON files
+- Pure JavaScript frontends with React
 - FastAPI backend with Uvicorn
 - Ready to run locally
 
 ## Project Structure
 ```
-dict-project/
-├── server.py                    # FastAPI server routing HTML files
+psychometric-dict-project/
+├── server.py                    # FastAPI server routing HTML files and JSON data
 ├── vocab-app-html.html          # Hebrew vocabulary app
 ├── vocab-app-english-html.html  # English vocabulary app
+├── data/                        # JSON data files
+│   ├── vocab-hebrew.json        # Hebrew vocabulary data
+│   └── vocab-english.json       # English vocabulary data
+├── js/                          # JavaScript modules
+│   └── dataManager.js           # Module for handling JSON data
 ```
 
 ## How to Run
@@ -24,42 +29,72 @@ dict-project/
    ```bash
    pip install fastapi uvicorn
    ```
-2. **Start the server:**
-   - Option 1 (recommended):
-     ```bash
-     python server.py
-     ```
-   - Option 2:
-     ```bash
-     uvicorn server:app --reload --port 8001
-     ```
-3. **Open in your browser:**
+
+2. **Make sure directories exist:**
+   Create `data` and `js` directories if they don't exist:
+   ```bash
+   mkdir -p data js
+   ```
+
+3. **Copy files to the right locations:**
+   - Copy `dataManager.js` to the `js` directory
+   - Copy JSON files to the `data` directory
+   - Place HTML files in the root directory
+
+4. **Start the server:**
+   ```bash
+   python server.py
+   ```
+
+5. **Open in your browser:**
    - Hebrew app: [http://127.0.0.1:8001/hebrew](http://127.0.0.1:8001/hebrew)
    - English app: [http://127.0.0.1:8001/english](http://127.0.0.1:8001/english)
 
-## Technologies Used
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Uvicorn](https://www.uvicorn.org/)
-- Pure JavaScript, HTML, and CSS
+## How it Works
+
+### Data Storage
+Instead of storing data in localStorage, the application now:
+1. Loads vocabulary data from JSON files in the `data` directory
+2. Keeps a cache of the data in memory for performance
+3. Provides export functionality to save changes as JSON files
+
+### Server
+The FastAPI server:
+1. Serves the HTML files
+2. Mounts the `js` and `data` directories as static files
+3. Provides routes for each app
+
+### User Interface
+The user interface remains largely the same:
+- Search and filter vocabulary
+- Add, edit and remove words
+- Mark words as known, unknown, or uncertain
+- Use flashcard mode for learning
+- Export and import data
+
+## Data Migration
+This project has been migrated from using localStorage to using JSON files for data storage. The main changes are:
+
+1. Added a `dataManager.js` module that handles:
+   - Loading data from JSON files
+   - Caching data in memory
+   - Exporting data to JSON files
+
+2. Modified HTML files to:
+   - Remove embedded initial data
+   - Use the dataManager module
+   - Add loading and error states
+
+3. Moved vocabulary data to external JSON files:
+   - `vocab-hebrew.json`
+   - `vocab-english.json`
 
 ## Customization
-- All changes to the vocabulary must be made through the app UI; users can add, edit, or remove words, and changes are automatically saved to the browser's local storage.
-- Advanced: To change the default vocabulary (the initial set shown on first use), modify the respective HTML files (`vocab-app-html.html` or `vocab-app-english-html.html`).
+To customize the vocabulary data, you can either:
+1. Edit the JSON files directly
+2. Use the app to add, edit, or remove words, and then export the data
 
-## License
-[MIT](LICENSE) (or specify your own)
-
-## Project Structure
-```
-dict-project/
-├── vocab-app-english-html.html  # Main application file
-```
-
-## Customization
-- To add or edit vocabulary, modify the `initialVocabData` array inside the `<script type="text/babel">` tag in `vocab-app-english-html.html`.
-
-## Contributing
-Pull requests and suggestions are welcome! Please open an issue to discuss your ideas.
-
-## License
-[MIT](LICENSE) (or specify your own)
+## Notes
+- The application will still work offline after initial loading
+- Changes are cached in memory but need to be exported to persist across sessions
+- For permanent server-side storage, you would need to implement the server-side storage API (commented out in server.py)
