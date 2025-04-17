@@ -16,27 +16,11 @@
   <div id="root"></div>
 
   <script type="text/babel">
+    // Import dataManager (dynamically imported since we're using Babel in browser)
+    let dataManager;
+    
     const VocabularyLearningTool = () => {
-      // Initial vocabulary data with your specific English word list
-      const initialVocabData = [
-        { word: 'adjacent', meaning: 'סמוך, צמוד', example: 'The library is adjacent to the school.', status: 'X' },
-        { word: 'albeit', meaning: 'אם כי, למרות ש-', example: 'He finally agreed, albeit reluctantly.', status: 'X' },
-        { word: 'all in all', meaning: 'בסך הכול', example: 'All in all, it was a good trip.', status: 'X' },
-        { word: 'altogether', meaning: 'לגמרי, בסך הכול', example: 'Altogether, there were 20 people at the party.', status: 'X' },
-        { word: 'amid', meaning: 'בין, בתוך', example: 'She managed to stay calm amid the chaos.', status: 'X' },
-        { word: 'as if', meaning: 'כאילו', example: 'He looked as if he had seen a ghost.', status: 'X' },
-        { word: 'aside from', meaning: 'מלבד', example: 'Aside from math, she also enjoys science.', status: 'X' },
-        { word: 'being that', meaning: 'מאחר ש-', example: 'Being that it was late, we went home.', status: 'X' },
-        { word: 'beneath', meaning: 'מתחת ל-', example: 'The pen was beneath the table.', status: 'X' },
-        { word: 'beside', meaning: 'ליד', example: 'She sat beside her friend.', status: 'X' },
-        { word: 'accordingly', meaning: 'בהתאם לכך', example: 'He was warned and acted accordingly.', status: '?' },
-        { word: 'across', meaning: 'מעבר ל-', example: 'There is a bridge across the river.', status: '?' },
-        { word: 'ahead of', meaning: 'לפני', example: 'He finished ahead of everyone else.', status: '?' },
-        { word: 'along', meaning: 'לאורך', example: 'We walked along the beach.', status: '?' },
-        { word: 'as well as', meaning: 'כמו גם', example: 'She speaks French as well as English.', status: '?' },
-        { word: 'at last', meaning: 'סוף סוף', example: 'At last, the train arrived.', status: '?' },
-      ];
-
+      // State for vocabulary data
       const [vocabData, setVocabData] = React.useState([]);
       const [filteredData, setFilteredData] = React.useState([]);
       const [searchTerm, setSearchTerm] = React.useState('');
@@ -47,114 +31,137 @@
       const [isFlashcardMode, setIsFlashcardMode] = React.useState(false);
       const [currentFlashcard, setCurrentFlashcard] = React.useState(null);
       const [isFlashcardFlipped, setIsFlashcardFlipped] = React.useState(false);
-
-      // Load data from localStorage on initial render
+      const [isLoading, setIsLoading] = React.useState(true);
+      const [errorMessage, setErrorMessage] = React.useState(null);
+      
+      // Load data from JSON file on initial render
       React.useEffect(() => {
-        const savedData = localStorage.getItem('vocabDataEnglish');
-        if (savedData) {
-          setVocabData(JSON.parse(savedData));
-        } else {
-          setVocabData(initialVocabData);
-        }
+        // Dynamic import for dataManager
+        import('/js/dataManager.js')
+          .then(module => {
+            dataManager = module.default;
+            loadVocabData();
+          })
+          .catch(error => {
+            console.error('Error importing dataManager:', error);
+            setErrorMessage('שגיאה בטעינת מנהל הנתונים. נא לרענן את הדף.');
+            setIsLoading(false);
+          });
       }, []);
-
-      // Save data to localStorage whenever vocabData changes
-      React.useEffect(() => {
-        if (vocabData.length > 0) {
-          localStorage.setItem('vocabDataEnglish', JSON.stringify(vocabData));
+      
+      // Load vocabulary data
+      const loadVocabData = async () => {
+        try {
+          setIsLoading(true);
+          const data = await dataManager.fetchVocabData();
+          setVocabData(data);
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Error loading vocabulary data:', error);
+          setErrorMessage('שגיאה בטעינת נתוני המילון. נא לרענן את הדף.');
+          setIsLoading(false);
         }
-      }, [vocabData]);
-
+      };
+      
       // Filter vocabulary based on search and status
       React.useEffect(() => {
         let result = vocabData;
+        
         if (searchTerm) {
-          result = result.filter(item =>
-            item.word.includes(searchTerm) ||
-            item.meaning.includes(searchTerm) ||
-            item.example.includes(searchTerm)
+          result = result.filter(item => 
+            item.word?.includes(searchTerm) || 
+            item.meaning?.includes(searchTerm) || 
+            item.example?.includes(searchTerm)
           );
         }
+        
         if (statusFilter !== 'all') {
           result = result.filter(item => item.status === statusFilter);
         }
+        
         setFilteredData(result);
       }, [vocabData, searchTerm, statusFilter]);
-
-      // Get background color based on status
-      const getStatusBackgroundColor = (status) => {
-        switch(status) {
-          case 'X': return 'bg-red-50';
-          case '?': return 'bg-purple-50';
-          case '✓': return 'bg-green-50';
-          default: return 'bg-white';
-        }
-      };
-
-      // Get text color based on status
-      const getStatusTextColor = (status, intensity = 'normal') => {
-        switch(status) {
-          case 'X': return intensity === 'high' ? 'text-red-800' : intensity === 'medium' ? 'text-red-700' : 'text-red-600';
-          case '?': return intensity === 'high' ? 'text-purple-800' : intensity === 'medium' ? 'text-purple-700' : 'text-purple-600';
-          case '✓': return intensity === 'high' ? 'text-green-800' : intensity === 'medium' ? 'text-green-700' : 'text-green-600';
-          default: return intensity === 'high' ? 'text-gray-800' : intensity === 'medium' ? 'text-gray-700' : 'text-gray-600';
-        }
-      };
-
+      
       // Update status of a word
       const updateStatus = (index, newStatus) => {
         const updatedData = [...vocabData];
         updatedData[index].status = newStatus;
         setVocabData(updatedData);
+        
+        // Save to JSON file through dataManager
+        dataManager.saveVocabData(updatedData)
+          .catch(error => {
+            console.error('Error saving vocabulary data:', error);
+            // You might want to show an error message to the user
+          });
       };
-
+      
       // Add a new word
       const addWord = () => {
         if (newWord.word && newWord.meaning) {
-          setVocabData([...vocabData, newWord]);
+          const updatedData = [...vocabData, newWord];
+          setVocabData(updatedData);
           setNewWord({ word: '', meaning: '', example: '', status: '' });
           setIsAdding(false);
+          
+          // Save to JSON file through dataManager
+          dataManager.saveVocabData(updatedData)
+            .catch(error => {
+              console.error('Error saving vocabulary data:', error);
+              // You might want to show an error message to the user
+            });
         }
       };
-
+      
       // Remove a word
       const removeWord = (index) => {
         const updatedData = [...vocabData];
         updatedData.splice(index, 1);
         setVocabData(updatedData);
+        
+        // Save to JSON file through dataManager
+        dataManager.saveVocabData(updatedData)
+          .catch(error => {
+            console.error('Error saving vocabulary data:', error);
+            // You might want to show an error message to the user
+          });
       };
-
+      
       // Get vocabulary index for word & meaning combo
       const getVocabIndex = (word, meaning) => {
         return vocabData.findIndex(item => item.word === word && item.meaning === meaning);
       };
 
-      // Reset all data to initial data
+      // Reset data (revert to initial state from JSON)
       const resetData = () => {
         if (window.confirm('האם אתה בטוח שברצונך לאפס את כל הנתונים? פעולה זו תמחק את כל המילים שהוספת וכל הסימונים שלך.')) {
-          setVocabData(initialVocabData);
-          localStorage.setItem('vocabDataEnglish', JSON.stringify(initialVocabData));
+          loadVocabData();
         }
       };
-
+      
       // Get a random flashcard
       const getRandomFlashcard = () => {
+        // Filter out words that would be excluded based on current filter
         let eligibleWords = vocabData;
         if (statusFilter !== 'all') {
           eligibleWords = vocabData.filter(item => item.status === statusFilter);
         }
         if (searchTerm) {
-          eligibleWords = eligibleWords.filter(item =>
-            item.word.includes(searchTerm) ||
-            item.meaning.includes(searchTerm) ||
-            item.example.includes(searchTerm)
+          eligibleWords = eligibleWords.filter(item => 
+            item.word?.includes(searchTerm) || 
+            item.meaning?.includes(searchTerm) || 
+            item.example?.includes(searchTerm)
           );
         }
+        
+        // If no eligible words, return null
         if (eligibleWords.length === 0) return null;
+        
+        // Get random word from filtered list
         const randomIndex = Math.floor(Math.random() * eligibleWords.length);
         return eligibleWords[randomIndex];
       };
-
+      
       // Start flashcard mode
       const startFlashcardMode = () => {
         const randomWord = getRandomFlashcard();
@@ -166,7 +173,7 @@
           alert('אין מילים זמינות במסנן הנוכחי. אנא שנה את המסנן או הוסף מילים נוספות.');
         }
       };
-
+      
       // Get next flashcard
       const getNextFlashcard = () => {
         const randomWord = getRandomFlashcard();
@@ -178,7 +185,7 @@
           setIsFlashcardMode(false);
         }
       };
-
+      
       // Update flashcard status
       const updateFlashcardStatus = (status) => {
         if (currentFlashcard) {
@@ -187,25 +194,80 @@
           setCurrentFlashcard({...currentFlashcard, status: status});
         }
       };
-
+      
+      // Get background color based on status
+      const getStatusBackgroundColor = (status) => {
+        switch(status) {
+          case 'X': return 'bg-red-50';
+          case '?': return 'bg-purple-50';
+          case '✓': return 'bg-green-50';
+          default: return 'bg-white';
+        }
+      };
+      
+      // Get text color based on status
+      const getStatusTextColor = (status, intensity = 'normal') => {
+        switch(status) {
+          case 'X': return intensity === 'high' ? 'text-red-800' : intensity === 'medium' ? 'text-red-700' : 'text-red-600';
+          case '?': return intensity === 'high' ? 'text-purple-800' : intensity === 'medium' ? 'text-purple-700' : 'text-purple-600';
+          case '✓': return intensity === 'high' ? 'text-green-800' : intensity === 'medium' ? 'text-green-700' : 'text-green-600';
+          default: return intensity === 'high' ? 'text-gray-800' : intensity === 'medium' ? 'text-gray-700' : 'text-gray-600';
+        }
+      };
+      
       // Export vocabulary data
       const exportData = () => {
-        const dataStr = JSON.stringify(vocabData, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        const exportFileDefaultName = 'vocab-data-english.json';
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        document.body.appendChild(linkElement);
-        linkElement.click();
-        document.body.removeChild(linkElement);
+        dataManager.exportData(vocabData);
       };
-
-      // ... UI code (same as your Hebrew version, using the same layout and logic) ...
-      // For brevity, only the vocabulary data and localStorage key differ. The rest of the UI code is identical.
-      // You can copy the UI code from your current Hebrew version and use it here.
-
-      // --- UI ---
+      
+      // Import vocabulary data
+      const importData = (event) => {
+        if (!event.target.files || !event.target.files[0]) {
+          return;
+        }
+        
+        const file = event.target.files[0];
+        
+        dataManager.importData(file)
+          .then(data => {
+            setVocabData(data);
+            alert('הנתונים יובאו בהצלחה');
+          })
+          .catch(error => {
+            alert('שגיאה בייבוא הקובץ: ' + error.message);
+          });
+      };
+      
+      // Loading state
+      if (isLoading) {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <h1 className="text-3xl font-bold mb-6 text-center">מילון למידה לפסיכומטרי - אנגלית</h1>
+            <div className="p-8 rounded-lg shadow-md bg-white">
+              <p className="text-xl text-center">טוען נתונים...</p>
+            </div>
+          </div>
+        );
+      }
+      
+      // Error state
+      if (errorMessage) {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <h1 className="text-3xl font-bold mb-6 text-center">מילון למידה לפסיכומטרי - אנגלית</h1>
+            <div className="p-8 rounded-lg shadow-md bg-white border-red-500 border-2">
+              <p className="text-xl text-center text-red-600 mb-4">{errorMessage}</p>
+              <button 
+                onClick={loadVocabData}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-auto block"
+              >
+                נסה שוב
+              </button>
+            </div>
+          </div>
+        );
+      }
+      
       return (
         <div className="max-w-4xl mx-auto p-4">
           <div className="flex justify-between items-center mb-4">
@@ -234,17 +296,6 @@
             </select>
             <button
               onClick={() => setIsAdding(true)}
-              className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
-            >
-              הוסף מילה
-            </button>
-            <button
-              onClick={() => setIsAdding(true)}
-              className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
-            >
-              הוסף מילה
-            </button>
-            <button
               onClick={startFlashcardMode}
               className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600"
             >
@@ -256,6 +307,21 @@
             >
               ייצא JSON
             </button>
+            <div className="relative">
+              <button
+                onClick={() => document.getElementById('file-input').click()}
+                className="bg-green-100 border border-green-400 text-green-700 px-3 py-1 rounded hover:bg-green-200"
+              >
+                ייבא JSON
+              </button>
+              <input
+                id="file-input"
+                type="file"
+                accept=".json"
+                onChange={importData}
+                className="hidden"
+              />
+            </div>
           </div>
 
           {/* Add New Word Modal */}
@@ -416,7 +482,7 @@
                       {item.status || ' '}
                     </span>
                   </div>
-                  <p className={`$${
+                  <p className={`${
                     item.status === 'X' ? 'text-red-700' : 
                     item.status === '?' ? 'text-purple-700' :
                     'text-gray-800'

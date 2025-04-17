@@ -16,42 +16,11 @@
   <div id="root"></div>
 
   <script type="text/babel">
+    // Import dataManager (dynamically imported since we're using Babel in browser)
+    let dataManager;
+    
     const VocabularyLearningTool = () => {
-      // Initial vocabulary data with your specific word list
-      const initialVocabData = [
-        { word: 'אבניים', meaning: 'מכשיר לעיבוד מתכת', example: 'הנפח השתמש באבניים כדי לעצב את הברזל', status: '' },
-        { word: 'אוצר', meaning: 'ממונה על המוצגים במוזיאון', example: 'האוצר תכנן את התערוכה החדשה במוזיאון', status: '' },
-        { word: 'אלומה', meaning: '1. קבוצת קני תבואה קשורים יחד', example: 'הכפריים אספו את האלומות בשדה', status: '' },
-        { word: 'אלומה', meaning: '2. קרן אור', example: 'אלומת אור חדרה דרך החלון', status: '' },
-        { word: 'אמודאי', meaning: 'צוללן מקצועי העובד מתחת למים', example: 'האמודאי תיקן את הצינור בקרקעית הים', status: '' },
-        { word: 'אמיר', meaning: 'פסגה, צמרת העץ', example: 'הציפור עפה אל אמיר העץ', status: '' },
-        { word: 'אמתלה', meaning: 'תירוץ, סיבה מדומה', example: 'הוא מצא אמתלה כדי לא להגיע לפגישה', status: '' },
-        { word: 'אצבעון', meaning: 'כיסוי מגן לאצבע', example: 'התופרת השתמשה באצבעון כדי להגן על אצבעה בזמן התפירה', status: '' },
-        { word: 'אקרן', meaning: 'מסך,רקע', example: 'ההרצאה הוקרנה על האקרן באולם', status: '' },
-        { word: 'אריג', meaning: 'בד, טקסטיל', example: 'החייט בחר אריג איכותי לתפירת החליפה', status: '' },
-        { word: 'ארעי', meaning: 'זמני, לא קבוע', example: 'הם גרו במבנה ארעי עד שבנו את ביתם', status: '?' },
-        { word: 'באור', meaning: 'פרשנות', example: 'המרצה נתן באור מעניין לטקסט', status: '' },
-        { word: 'בגפו', meaning: 'לבדו', example: 'הוא הגיע בגפו לארץ חדשה', status: '' },
-        { word: 'בורסקי/בורסקאי/בורסי', meaning: 'עובד בעורות, רצען', example: 'הבורסקי עיבד את העורות בסדנתו', status: '' },
-        { word: 'בושש', meaning: 'התמהמה, התעכב', example: 'החתן בושש להגיע לחתונתו', status: '' },
-        { word: 'ביות', meaning: 'הפיכת חיה לחיית משק או מחמד', example: 'ביות הכלב התרחש לפני אלפי שנים', status: '' },
-        { word: 'בית בד', meaning: 'מקום לייצור שמן זית', example: 'הזיתים הובאו לבית הבד להפקת שמן', status: '' },
-        { word: 'בית ברזה', meaning: 'בר, פאב', example: 'החברים נפגשו בבית הברזה לשתות יחד', status: '' },
-        { word: 'בלן', meaning: 'מפעיל בית מרחץ', example: 'הבלן הכין את המרחץ לאורחים', status: '' },
-        { word: 'במפגיע', meaning: '1. בעקשנות, בתוקף', example: 'הוא ביקש במפגיע שנעזור לו', status: '' },
-        { word: 'במפגיע', meaning: '2. בכוונה, במזיד', example: 'הוא פגע בי במפגיע', status: '' },
-        { word: 'בעליל', meaning: 'בבירור, באופן ברור', example: 'ניכר בעליל שהוא משקר', status: '?' },
-        { word: 'בצר', meaning: 'קטף ענבים', example: 'בצר את הענבים בכרם', status: '' },
-        { word: 'ברא', meaning: 'כרת עצים', example: 'ברא את העצים ביער', status: '' },
-        { word: 'גדה', meaning: '1. שפת הנהר', example: 'ישבנו על גדת הנחל', status: '' },
-        { word: 'גדה', meaning: '2. קצה של כלי', example: 'המים עלו על גדות הכוס', status: '' },
-        { word: 'גהר', meaning: 'התכופף', example: 'גהר מעל המים כדי לשתות', status: '' },
-        { word: 'גור', meaning: 'הזהר, היזהר', example: 'גור לך מפני הסכנה', status: '' },
-        { word: 'גזוזטרה', meaning: 'מרפסת, מעקה בולט', example: 'עמדנו על הגזוזטרה וצפינו בנוף', status: '' },
-        { word: 'גזיר', meaning: 'פיסת נייר חתוכה', example: 'הוא רשם את ההודעה על גזיר נייר', status: '' },
-        { word: 'גלען', meaning: 'הוציא את הגלעין', example: 'גלען את הזיתים לפני שהגיש אותם', status: '' },
-      ];
-
+      // State for vocabulary data
       const [vocabData, setVocabData] = React.useState([]);
       const [filteredData, setFilteredData] = React.useState([]);
       const [searchTerm, setSearchTerm] = React.useState('');
@@ -62,23 +31,37 @@
       const [isFlashcardMode, setIsFlashcardMode] = React.useState(false);
       const [currentFlashcard, setCurrentFlashcard] = React.useState(null);
       const [isFlashcardFlipped, setIsFlashcardFlipped] = React.useState(false);
+      const [isLoading, setIsLoading] = React.useState(true);
+      const [errorMessage, setErrorMessage] = React.useState(null);
       
-      // Load data from localStorage on initial render
+      // Load data from JSON file on initial render
       React.useEffect(() => {
-        const savedData = localStorage.getItem('vocabData');
-        if (savedData) {
-          setVocabData(JSON.parse(savedData));
-        } else {
-          setVocabData(initialVocabData);
-        }
+        // Dynamic import for dataManager
+        import('/js/dataManager.js')
+          .then(module => {
+            dataManager = module.default;
+            loadVocabData();
+          })
+          .catch(error => {
+            console.error('Error importing dataManager:', error);
+            setErrorMessage('שגיאה בטעינת מנהל הנתונים. נא לרענן את הדף.');
+            setIsLoading(false);
+          });
       }, []);
       
-      // Save data to localStorage whenever vocabData changes
-      React.useEffect(() => {
-        if (vocabData.length > 0) {
-          localStorage.setItem('vocabData', JSON.stringify(vocabData));
+      // Load vocabulary data
+      const loadVocabData = async () => {
+        try {
+          setIsLoading(true);
+          const data = await dataManager.fetchVocabData();
+          setVocabData(data);
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Error loading vocabulary data:', error);
+          setErrorMessage('שגיאה בטעינת נתוני המילון. נא לרענן את הדף.');
+          setIsLoading(false);
         }
-      }, [vocabData]);
+      };
       
       // Filter vocabulary based on search and status
       React.useEffect(() => {
@@ -86,9 +69,9 @@
         
         if (searchTerm) {
           result = result.filter(item => 
-            item.word.includes(searchTerm) || 
-            item.meaning.includes(searchTerm) || 
-            item.example.includes(searchTerm)
+            item.word?.includes(searchTerm) || 
+            item.meaning?.includes(searchTerm) || 
+            item.example?.includes(searchTerm)
           );
         }
         
@@ -104,14 +87,29 @@
         const updatedData = [...vocabData];
         updatedData[index].status = newStatus;
         setVocabData(updatedData);
+        
+        // Save to JSON file through dataManager
+        dataManager.saveVocabData(updatedData)
+          .catch(error => {
+            console.error('Error saving vocabulary data:', error);
+            // You might want to show an error message to the user
+          });
       };
       
       // Add a new word
       const addWord = () => {
         if (newWord.word && newWord.meaning) {
-          setVocabData([...vocabData, newWord]);
+          const updatedData = [...vocabData, newWord];
+          setVocabData(updatedData);
           setNewWord({ word: '', meaning: '', example: '', status: '' });
           setIsAdding(false);
+          
+          // Save to JSON file through dataManager
+          dataManager.saveVocabData(updatedData)
+            .catch(error => {
+              console.error('Error saving vocabulary data:', error);
+              // You might want to show an error message to the user
+            });
         }
       };
       
@@ -120,6 +118,13 @@
         const updatedData = [...vocabData];
         updatedData.splice(index, 1);
         setVocabData(updatedData);
+        
+        // Save to JSON file through dataManager
+        dataManager.saveVocabData(updatedData)
+          .catch(error => {
+            console.error('Error saving vocabulary data:', error);
+            // You might want to show an error message to the user
+          });
       };
       
       // Get vocabulary index for word & meaning combo
@@ -127,11 +132,10 @@
         return vocabData.findIndex(item => item.word === word && item.meaning === meaning);
       };
 
-      // Reset all data to initial data
+      // Reset data (revert to initial state from JSON)
       const resetData = () => {
         if (window.confirm('האם אתה בטוח שברצונך לאפס את כל הנתונים? פעולה זו תמחק את כל המילים שהוספת וכל הסימונים שלך.')) {
-          setVocabData(initialVocabData);
-          localStorage.setItem('vocabData', JSON.stringify(initialVocabData));
+          loadVocabData();
         }
       };
       
@@ -144,9 +148,9 @@
         }
         if (searchTerm) {
           eligibleWords = eligibleWords.filter(item => 
-            item.word.includes(searchTerm) || 
-            item.meaning.includes(searchTerm) || 
-            item.example.includes(searchTerm)
+            item.word?.includes(searchTerm) || 
+            item.meaning?.includes(searchTerm) || 
+            item.example?.includes(searchTerm)
           );
         }
         
@@ -213,35 +217,56 @@
       
       // Export vocabulary data
       const exportData = () => {
-        const dataStr = JSON.stringify(vocabData, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = 'vocab-data.json';
-        
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
+        dataManager.exportData(vocabData);
       };
       
       // Import vocabulary data
       const importData = (event) => {
-        const fileReader = new FileReader();
-        fileReader.readAsText(event.target.files[0], "UTF-8");
-        fileReader.onload = e => {
-          try {
-            const data = JSON.parse(e.target.result);
-            if (Array.isArray(data)) {
-              setVocabData(data);
-              alert('הנתונים יובאו בהצלחה');
-            } else {
-              alert('פורמט קובץ לא חוקי. אנא ייבא קובץ JSON תקין');
-            }
-          } catch (error) {
+        if (!event.target.files || !event.target.files[0]) {
+          return;
+        }
+        
+        const file = event.target.files[0];
+        
+        dataManager.importData(file)
+          .then(data => {
+            setVocabData(data);
+            alert('הנתונים יובאו בהצלחה');
+          })
+          .catch(error => {
             alert('שגיאה בייבוא הקובץ: ' + error.message);
-          }
-        };
+          });
       };
+      
+      // Loading state
+      if (isLoading) {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <h1 className="text-3xl font-bold mb-6 text-center">מילון למידה לפסיכומטרי</h1>
+            <div className="p-8 rounded-lg shadow-md bg-white">
+              <p className="text-xl text-center">טוען נתונים...</p>
+            </div>
+          </div>
+        );
+      }
+      
+      // Error state
+      if (errorMessage) {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen p-4">
+            <h1 className="text-3xl font-bold mb-6 text-center">מילון למידה לפסיכומטרי</h1>
+            <div className="p-8 rounded-lg shadow-md bg-white border-red-500 border-2">
+              <p className="text-xl text-center text-red-600 mb-4">{errorMessage}</p>
+              <button 
+                onClick={loadVocabData}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mx-auto block"
+              >
+                נסה שוב
+              </button>
+            </div>
+          </div>
+        );
+      }
       
       return (
         <div className="flex flex-col p-4 max-w-4xl mx-auto bg-gray-50 min-h-screen" dir="rtl">

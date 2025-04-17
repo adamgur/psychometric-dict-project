@@ -1,0 +1,18 @@
+[
+  {"word": "adjacent", "meaning": "סמוך, צמוד", "example": "The library is adjacent to the school.", "status": "X"},
+  {"word": "albeit", "meaning": "אם כי, למרות ש-", "example": "He finally agreed, albeit reluctantly.", "status": "X"},
+  {"word": "all in all", "meaning": "בסך הכול", "example": "All in all, it was a good trip.", "status": "X"},
+  {"word": "altogether", "meaning": "לגמרי, בסך הכול", "example": "Altogether, there were 20 people at the party.", "status": "X"},
+  {"word": "amid", "meaning": "בין, בתוך", "example": "She managed to stay calm amid the chaos.", "status": "X"},
+  {"word": "as if", "meaning": "כאילו", "example": "He looked as if he had seen a ghost.", "status": "X"},
+  {"word": "aside from", "meaning": "מלבד", "example": "Aside from math, she also enjoys science.", "status": "X"},
+  {"word": "being that", "meaning": "מאחר ש-", "example": "Being that it was late, we went home.", "status": "X"},
+  {"word": "beneath", "meaning": "מתחת ל-", "example": "The pen was beneath the table.", "status": "X"},
+  {"word": "beside", "meaning": "ליד", "example": "She sat beside her friend.", "status": "X"},
+  {"word": "accordingly", "meaning": "בהתאם לכך", "example": "He was warned and acted accordingly.", "status": "?"},
+  {"word": "across", "meaning": "מעבר ל-", "example": "There is a bridge across the river.", "status": "?"},
+  {"word": "ahead of", "meaning": "לפני", "example": "He finished ahead of everyone else.", "status": "?"},
+  {"word": "along", "meaning": "לאורך", "example": "We walked along the beach.", "status": "?"},
+  {"word": "as well as", "meaning": "כמו גם", "example": "She speaks French as well as English.", "status": "?"},
+  {"word": "at last", "meaning": "סוף סוף", "example": "At last, the train arrived.", "status": "?"}
+]
