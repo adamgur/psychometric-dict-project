@@ -3,7 +3,7 @@
 const DATA_FILE = 'vocab-english.json';
 const DATA_PATH = '/data/';
 
-const dataManager = {
+export default {
   async fetchVocabData() {
     const response = await fetch(`${DATA_PATH}${DATA_FILE}`);
     if (!response.ok) {
@@ -46,5 +46,3 @@ const dataManager = {
     });
   }
 };
-
-export default dataManager;

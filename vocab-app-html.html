@@ -16,9 +16,40 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    // Import dataManager (dynamically imported since we're using Babel in browser)
-    let dataManager;
-    
+    // Inline dataManager for Hebrew app
+    const DATA_PATH = '/data/';
+    const DATA_FILE = 'vocab-hebrew.json';
+    const dataManager = {
+      async fetchVocabData() {
+        const response = await fetch(`${DATA_PATH}${DATA_FILE}`);
+        if (!response.ok) throw new Error('Failed to load vocabulary data');
+        return await response.json();
+      },
+      async saveVocabData(data) {
+        return Promise.resolve();
+      },
+      exportData(data) {
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', DATA_FILE);
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
+      },
+      importData(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = event => {
+            try { resolve(JSON.parse(event.target.result)); } catch (err) { reject(err); }
+          };
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+      }
+    };
+
     const VocabularyLearningTool = () => {
       // State for vocabulary data
       const [vocabData, setVocabData] = React.useState([]);
@@ -34,21 +65,6 @@
       const [isLoading, setIsLoading] = React.useState(true);
       const [errorMessage, setErrorMessage] = React.useState(null);
       
-      // Load data from JSON file on initial render
-      React.useEffect(() => {
-        // Dynamic import for dataManager
-        import('/js/dataManager.js')
-          .then(module => {
-            dataManager = module.default;
-            loadVocabData();
-          })
-          .catch(error => {
-            console.error('Error importing dataManager:', error);
-            setErrorMessage('שגיאה בטעינת מנהל הנתונים. נא לרענן את הדף.');
-            setIsLoading(false);
-          });
-      }, []);
-      
       // Load vocabulary data
       const loadVocabData = async () => {
         try {
@@ -62,6 +78,9 @@
           setIsLoading(false);
         }
       };
+      
+      // Load data on mount
+      React.useEffect(() => { loadVocabData(); }, []);
       
       // Filter vocabulary based on search and status
       React.useEffect(() => {

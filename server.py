@@ -9,8 +9,8 @@ app = FastAPI()
 
 # Mount static directories
 # This will allow serving JS and JSON files
-app.mount("/js", StaticFiles(directory="js"), name="js")
-app.mount("/data", StaticFiles(directory="data"), name="data")
+app.mount("/js", StaticFiles(directory="js"), name="js")  # serve JS modules
+app.mount("/data", StaticFiles(directory="data"), name="data")  # serve JSON data files
 
 @app.get("/hebrew")
 def serve_hebrew():
