@@ -14,11 +14,11 @@ A vocabulary learning tool for psychometric exam preparation. This project has b
 ## Project Structure
 ```
 psychometric-dict-project/
-├── server.py                    # FastAPI server routing HTML files and JSON data
+├── server.py                    # FastAPI server routing HTML files and serving static files
 ├── vocab-app-html.html          # Hebrew vocabulary app
 ├── vocab-app-english-html.html  # English vocabulary app
 ├── data/                        # JSON data files
-│   ├── vocab-hebrew.json        # Hebrew vocabulary data
+│   ├── hebrew-json.json         # Hebrew vocabulary data
 │   └── vocab-english.json       # English vocabulary data
 ├── js/                          # JavaScript modules
 │   └── dataManager.js           # Module for handling JSON data
@@ -37,9 +37,9 @@ psychometric-dict-project/
    ```
 
 3. **Copy files to the right locations:**
-   - Copy `dataManager.js` to the `js` directory
-   - Copy JSON files to the `data` directory
-   - Place HTML files in the root directory
+   - Place `dataManager.js` in the `js/` directory
+   - Place `vocab-app-html.html` and `vocab-app-english-html.html` in the project root
+   - Place `hebrew-json.json` and `vocab-english.json` in the `data/` directory
 
 4. **Start the server:**
    ```bash
@@ -86,7 +86,7 @@ This project has been migrated from using localStorage to using JSON files for d
    - Add loading and error states
 
 3. Moved vocabulary data to external JSON files:
-   - `vocab-hebrew.json`
+   - `hebrew-json.json`
    - `vocab-english.json`
 
 ## Customization
