@@ -20,25 +20,27 @@ class StorageManager {
     if (this.cache[key]) {
       return this.cache[key];
     }
-    
+
     try {
       // Fetch data from JSON file
       const response = await fetch(`${this.dataPath}${key}.json`);
-      
+
       // Check if fetch was successful
       if (!response.ok) {
+        console.error(`Failed to load data from ${this.dataPath}${key}.json: ${response.status} ${response.statusText}`);
         throw new Error(`Failed to load data: ${response.status} ${response.statusText}`);
       }
-      
+
       // Parse JSON response
       const data = await response.json();
-      
+
       // Cache the data for future requests
       this.cache[key] = data;
-      
+
       return data;
     } catch (error) {
-      console.error(`Error loading data from ${key}.json:`, error);
+      console.error(`Error loading data from ${this.dataPath}${key}.json:`, error);
+      alert(`Error loading data: ${error.message}`); // Added alert for user feedback
       return null;
     }
   }
