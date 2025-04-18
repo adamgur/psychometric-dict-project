@@ -105,8 +105,15 @@
       const [isAdding, setIsAdding] = React.useState(false);
       const [selectedWord, setSelectedWord] = React.useState(null);
       const [isFlashcardMode, setIsFlashcardMode] = React.useState(false);
+      const [isFlashcardOptionsOpen, setIsFlashcardOptionsOpen] = React.useState(false);
       const [currentFlashcard, setCurrentFlashcard] = React.useState(null);
       const [isFlashcardFlipped, setIsFlashcardFlipped] = React.useState(false);
+      const [flashcardSettings, setFlashcardSettings] = React.useState({
+        includeUnknown: true,    // X
+        includeUncertain: true,  // ?
+        includeKnown: false,     // ✓
+        includeUnmarked: true,   // empty string
+      });
       const [isLoading, setIsLoading] = React.useState(true);
       const [errorMessage, setErrorMessage] = React.useState(null);
       
@@ -206,13 +213,11 @@
         }
       };
       
-      // Get a random flashcard
+      // Get a random flashcard based on selected statuses
       const getRandomFlashcard = () => {
-        // Filter out words that would be excluded based on current filter
+        // Filter by statusFilter and searchTerm if they're active
         let eligibleWords = vocabData;
-        if (statusFilter !== 'all') {
-          eligibleWords = vocabData.filter(item => item.status === statusFilter);
-        }
+        
         if (searchTerm) {
           eligibleWords = eligibleWords.filter(item => 
             item.word?.includes(searchTerm) || 
@@ -220,6 +225,19 @@
             item.example?.includes(searchTerm)
           );
         }
+        
+        if (statusFilter !== 'all') {
+          eligibleWords = eligibleWords.filter(item => item.status === statusFilter);
+        }
+        
+        // Further filter by selected status types for flashcards
+        eligibleWords = eligibleWords.filter(item => {
+          if (item.status === 'X' && flashcardSettings.includeUnknown) return true;
+          if (item.status === '?' && flashcardSettings.includeUncertain) return true;
+          if (item.status === '✓' && flashcardSettings.includeKnown) return true;
+          if (item.status === '' && flashcardSettings.includeUnmarked) return true;
+          return false;
+        });
         
         // If no eligible words, return null
         if (eligibleWords.length === 0) return null;
@@ -229,15 +247,23 @@
         return eligibleWords[randomIndex];
       };
       
-      // Start flashcard mode
+      // Open flashcard settings modal
+      const openFlashcardOptions = () => {
+        setIsFlashcardOptionsOpen(true);
+      };
+      
+      // Start flashcard mode with current settings
       const startFlashcardMode = () => {
+        // Hide the options panel first
+        setIsFlashcardOptionsOpen(false);
+        
         const randomWord = getRandomFlashcard();
         if (randomWord) {
           setCurrentFlashcard(randomWord);
           setIsFlashcardFlipped(false);
           setIsFlashcardMode(true);
         } else {
-          alert('אין מילים זמינות במסנן הנוכחי. אנא שנה את המסנן או הוסף מילים נוספות.');
+          alert('אין מילים זמינות עם ההגדרות הנוכחיות. אנא שנה את ההגדרות או הוסף מילים נוספות.');
         }
       };
       
@@ -370,7 +396,7 @@
               {isAdding ? 'ביטול' : 'הוסף מילה חדשה'}
             </button>
             <button
-              onClick={startFlashcardMode}
+              onClick={openFlashcardOptions}
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             >
               מצב למידה אקראי
@@ -407,6 +433,87 @@
               />
             </div>
           </div>
+          
+          {/* Flashcard options modal */}
+          {isFlashcardOptionsOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
+                <h2 className="text-xl font-bold mb-4">הגדרות למידה אקראית</h2>
+                <p className="mb-4 text-gray-600">בחר אילו סוגי מילים ברצונך לכלול במצב למידה אקראי:</p>
+                
+                <div className="space-y-3 mb-6">
+                  <label className="flex items-center space-x-2 space-x-reverse">
+                    <input
+                      type="checkbox"
+                      checked={flashcardSettings.includeUnknown}
+                      onChange={() => setFlashcardSettings({
+                        ...flashcardSettings,
+                        includeUnknown: !flashcardSettings.includeUnknown
+                      })}
+                      className="h-5 w-5 text-red-600"
+                    />
+                    <span className="text-red-800 font-medium">מילים שאינני יודע (X)</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 space-x-reverse">
+                    <input
+                      type="checkbox"
+                      checked={flashcardSettings.includeUncertain}
+                      onChange={() => setFlashcardSettings({
+                        ...flashcardSettings,
+                        includeUncertain: !flashcardSettings.includeUncertain
+                      })}
+                      className="h-5 w-5 text-purple-600"
+                    />
+                    <span className="text-purple-800 font-medium">מילים שאני לא בטוח לגביהן (?)</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 space-x-reverse">
+                    <input
+                      type="checkbox"
+                      checked={flashcardSettings.includeKnown}
+                      onChange={() => setFlashcardSettings({
+                        ...flashcardSettings,
+                        includeKnown: !flashcardSettings.includeKnown
+                      })}
+                      className="h-5 w-5 text-green-600"
+                    />
+                    <span className="text-green-800 font-medium">מילים שאני יודע (✓)</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 space-x-reverse">
+                    <input
+                      type="checkbox"
+                      checked={flashcardSettings.includeUnmarked}
+                      onChange={() => setFlashcardSettings({
+                        ...flashcardSettings,
+                        includeUnmarked: !flashcardSettings.includeUnmarked
+                      })}
+                      className="h-5 w-5 text-gray-600"
+                    />
+                    <span className="text-gray-800 font-medium">מילים שטרם סימנתי</span>
+                  </label>
+                </div>
+                
+                <div className="flex justify-end gap-2">
+                  <button 
+                    onClick={() => setIsFlashcardOptionsOpen(false)} 
+                    className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                  >
+                    ביטול
+                  </button>
+                  <button 
+                    onClick={startFlashcardMode}
+                    className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600"
+                    disabled={!flashcardSettings.includeUnknown && !flashcardSettings.includeUncertain && 
+                             !flashcardSettings.includeKnown && !flashcardSettings.includeUnmarked}
+                  >
+                    התחל למידה
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Add new word form */}
           {isAdding && (
@@ -541,7 +648,7 @@
                 
                 {isFlashcardFlipped && (
                   <div className="mt-4 flex justify-between">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => {
                           updateFlashcardStatus('✓');
@@ -617,6 +724,7 @@
                   className={`p-4 rounded shadow hover:shadow-md cursor-pointer ${
                     item.status === 'X' ? 'bg-red-50' : 
                     item.status === '?' ? 'bg-purple-50' :
+                    item.status === '✓' ? 'bg-green-50' :
                     'bg-white'
                   }`}
                   onClick={() => setSelectedWord(item)}
@@ -625,6 +733,7 @@
                     <h3 className={`text-lg font-bold ${
                       item.status === 'X' ? 'text-red-800' : 
                       item.status === '?' ? 'text-purple-800' :
+                      item.status === '✓' ? 'text-green-800' :
                       'text-gray-800'
                     }`}>{item.word}</h3>
                     <span className={`font-bold text-lg ${
@@ -638,11 +747,13 @@
                   <p className={`${
                     item.status === 'X' ? 'text-red-700' : 
                     item.status === '?' ? 'text-purple-700' :
+                    item.status === '✓' ? 'text-green-700' :
                     'text-gray-800'
                   }`}>{item.meaning}</p>
                   <p className={`text-sm italic mt-1 truncate ${
                     item.status === 'X' ? 'text-red-600' : 
                     item.status === '?' ? 'text-purple-600' :
+                    item.status === '✓' ? 'text-green-600' :
                     'text-gray-600'
                   }`}>דוגמה: {item.example}</p>
                 </div>
