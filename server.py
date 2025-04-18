@@ -20,32 +20,16 @@ def serve_hebrew():
 def serve_english():
     return FileResponse("vocab-app-english-html.html")
 
-# Optional: API to handle data updates (for future enhancement)
-# Uncomment and implement if you want server-side data persistence
-"""
-from fastapi import Body
-from typing import List
-import json
-
-@app.post("/api/vocab/{language}")
-def update_vocab(language: str, data: List[dict] = Body(...)):
-    if language not in ["hebrew", "english"]:
-        raise HTTPException(status_code=400, detail="Invalid language")
-    
-    file_path = f"data/vocab-{language}.json"
-    
-    try:
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update data: {str(e)}")
-"""
+# Note: With localStorage implementation, the server-side data API is not needed
+# The app now uses localStorage for data persistence
+# The JSON files are still served as initial data or for reset functionality
 
 # Root path redirects to Hebrew version
 @app.get("/")
 def root():
-    return {"message": "Psychometric Dictionary API", "endpoints": ["/hebrew", "/english", "/data/vocab-hebrew.json", "/data/vocab-english.json"]}
+    return {"message": "Psychometric Dictionary API", 
+            "endpoints": ["/hebrew", "/english", "/data/vocab-hebrew.json", "/data/vocab-english.json"],
+            "note": "This application now uses localStorage for data persistence."}
 
 if __name__ == "__main__":
     # Create data directory if it doesn't exist
