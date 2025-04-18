@@ -29,7 +29,7 @@ def serve_english():
 def root():
     return {"message": "Psychometric Dictionary API", 
             "endpoints": ["/hebrew", "/english", "/data/vocab-hebrew.json", "/data/vocab-english.json"],
-            "note": "This application now uses localStorage for data persistence."}
+            "note": "This application now uses localStorage for data persistence and supports learning by level."}
 
 if __name__ == "__main__":
     # Create data directory if it doesn't exist
