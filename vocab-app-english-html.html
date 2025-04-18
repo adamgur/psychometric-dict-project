@@ -16,19 +16,54 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    // Import dataManager (inlined for static usage)
+    // Inline dataManager for English app with localStorage support
     const DATA_PATH = '/data/';
     const DATA_FILE = 'vocab-english.json';
+    const STORAGE_KEY = 'vocab-english-data';
+    
     const dataManager = {
       async fetchVocabData() {
-        const response = await fetch(`${DATA_PATH}${DATA_FILE}`);
-        if (!response.ok) throw new Error('Failed to load vocabulary data');
-        return await response.json();
+        try {
+          // First check if we have data in localStorage
+          const localData = localStorage.getItem(STORAGE_KEY);
+          
+          if (localData) {
+            // If we have local data, use it
+            console.log("Using data from localStorage");
+            return JSON.parse(localData);
+          } else {
+            // Otherwise fetch from the JSON file
+            console.log("Fetching data from JSON file");
+            const response = await fetch(`${DATA_PATH}${DATA_FILE}`);
+            if (!response.ok) {
+              throw new Error('Failed to load vocabulary data');
+            }
+            const data = await response.json();
+            
+            // Save the initial data to localStorage
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            console.log("Saved initial data to localStorage");
+            
+            return data;
+          }
+        } catch (error) {
+          console.error('Error fetching vocabulary data:', error);
+          throw error;
+        }
       },
+      
       async saveVocabData(data) {
-        // Client-side save placeholder
-        return Promise.resolve();
+        try {
+          // Save the data to localStorage
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          console.log("Data saved to localStorage:", data.length, "items");
+          return Promise.resolve();
+        } catch (error) {
+          console.error('Error saving to localStorage:', error);
+          return Promise.reject(error);
+        }
       },
+      
       exportData(data) {
         const dataStr = JSON.stringify(data, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
@@ -39,15 +74,30 @@
         linkElement.click();
         document.body.removeChild(linkElement);
       },
+      
       importData(file) {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = event => {
-            try { resolve(JSON.parse(event.target.result)); } catch (err) { reject(err); }
+            try { 
+              const data = JSON.parse(event.target.result);
+              // Also save to localStorage
+              localStorage.setItem(STORAGE_KEY, event.target.result);
+              console.log("Imported data saved to localStorage");
+              resolve(data); 
+            } catch (err) { 
+              reject(err); 
+            }
           };
           reader.onerror = reject;
           reader.readAsText(file);
         });
+      },
+      
+      clearData() {
+        // Remove data from localStorage
+        localStorage.removeItem(STORAGE_KEY);
+        console.log("localStorage data cleared");
       }
     };
 
@@ -108,11 +158,11 @@
         updatedData[index].status = newStatus;
         setVocabData(updatedData);
         
-        // Save to JSON file through dataManager
+        // Save to localStorage through dataManager
         dataManager.saveVocabData(updatedData)
           .catch(error => {
             console.error('Error saving vocabulary data:', error);
-            // You might want to show an error message to the user
+            alert('שגיאה בשמירת הנתונים. נא לנסות שוב.');
           });
       };
       
@@ -124,11 +174,11 @@
           setNewWord({ word: '', meaning: '', example: '', status: '' });
           setIsAdding(false);
           
-          // Save to JSON file through dataManager
+          // Save to localStorage through dataManager
           dataManager.saveVocabData(updatedData)
             .catch(error => {
               console.error('Error saving vocabulary data:', error);
-              // You might want to show an error message to the user
+              alert('שגיאה בשמירת הנתונים. נא לנסות שוב.');
             });
         }
       };
@@ -139,11 +189,11 @@
         updatedData.splice(index, 1);
         setVocabData(updatedData);
         
-        // Save to JSON file through dataManager
+        // Save to localStorage through dataManager
         dataManager.saveVocabData(updatedData)
           .catch(error => {
             console.error('Error saving vocabulary data:', error);
-            // You might want to show an error message to the user
+            alert('שגיאה בשמירת הנתונים. נא לנסות שוב.');
           });
       };
       
@@ -155,6 +205,9 @@
       // Reset data (revert to initial state from JSON)
       const resetData = () => {
         if (window.confirm('האם אתה בטוח שברצונך לאפס את כל הנתונים? פעולה זו תמחק את כל המילים שהוספת וכל הסימונים שלך.')) {
+          // Clear localStorage first
+          dataManager.clearData();
+          // Then reload from the JSON file
           loadVocabData();
         }
       };
@@ -396,7 +449,7 @@
           {/* Flashcard Mode */}
           {isFlashcardMode && currentFlashcard && (
             <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-              <div className="p-8 border rounded bg-white shadow-lg mb-4">
+              <div className="p-8 border rounded bg-white shadow-lg mb-4 max-w-2xl w-full">
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-2xl font-bold">מצב למידה אקראי</h2>
                   <button 
@@ -489,6 +542,7 @@
                   className={`p-4 rounded shadow hover:shadow-md cursor-pointer ${
                     item.status === 'X' ? 'bg-red-50' : 
                     item.status === '?' ? 'bg-purple-50' :
+                    item.status === '✓' ? 'bg-green-50' :
                     'bg-white'
                   }`}
                   onClick={() => setSelectedWord(item)}
@@ -533,7 +587,7 @@
                 <h3 className="text-lg font-bold mb-2">{selectedWord.word}</h3>
                 <p className="mb-2">פירוש: {selectedWord.meaning}</p>
                 <p className="mb-2">משפט לדוגמה: {selectedWord.example}</p>
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-wrap gap-2 mt-4">
                   <button onClick={() => { updateStatus(getVocabIndex(selectedWord.word, selectedWord.meaning), '✓'); setSelectedWord(null); }} className="bg-green-100 border border-green-500 text-green-700 px-3 py-1 rounded hover:bg-green-200">✓ ידעתי</button>
                   <button onClick={() => { updateStatus(getVocabIndex(selectedWord.word, selectedWord.meaning), 'X'); setSelectedWord(null); }} className="bg-red-100 border border-red-500 text-red-700 px-3 py-1 rounded hover:bg-red-200">X לא ידעתי</button>
                   <button onClick={() => { updateStatus(getVocabIndex(selectedWord.word, selectedWord.meaning), '?'); setSelectedWord(null); }} className="bg-gray-100 border border-gray-500 text-gray-700 px-3 py-1 rounded hover:bg-gray-200">? לא בטוח</button>
@@ -546,7 +600,10 @@
         </div>
       );
     };
-    ReactDOM.createRoot(document.getElementById('root')).render(<VocabularyLearningTool />);
+    
+    // Render the app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<VocabularyLearningTool />);
   </script>
 </body>
 </html>

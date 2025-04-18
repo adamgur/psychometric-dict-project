@@ -1,12 +1,14 @@
 # Psychometric Dictionary Project
 
-A vocabulary learning tool for psychometric exam preparation. This project has been migrated from using localStorage to using JSON files for data storage.
+A vocabulary learning tool for psychometric exam preparation. This project has been updated to use localStorage for client-side data persistence.
 
 ## Features
 - English-to-Hebrew and Hebrew-to-English vocabulary practice
 - Two separate HTML apps: Hebrew and English
 - Users can edit the dictionary via the app UI
-- All changes can be exported as JSON files
+- All changes are saved automatically to localStorage in your browser
+- Changes can be exported as JSON files
+- Changes persist between sessions until you clear your browser data
 - Pure JavaScript frontends with React
 - FastAPI backend with Uvicorn
 - Ready to run locally
@@ -14,14 +16,13 @@ A vocabulary learning tool for psychometric exam preparation. This project has b
 ## Project Structure
 ```
 psychometric-dict-project/
-├── server.py                    # FastAPI server routing HTML files and serving static files
+├── server.py                    # FastAPI server routing HTML files and JSON data
 ├── vocab-app-html.html          # Hebrew vocabulary app
 ├── vocab-app-english-html.html  # English vocabulary app
-├── data/                        # JSON data files
-│   ├── hebrew-json.json         # Hebrew vocabulary data
-│   └── vocab-english.json       # English vocabulary data
-├── js/                          # JavaScript modules
-│   └── dataManager.js           # Module for handling JSON data
+├── data/                        # JSON data files (initial data)
+│   ├── vocab-hebrew.json        # Hebrew vocabulary initial data
+│   └── vocab-english.json       # English vocabulary initial data
+├── js/                          # JavaScript modules (optional)
 ```
 
 ## How to Run
@@ -37,9 +38,8 @@ psychometric-dict-project/
    ```
 
 3. **Copy files to the right locations:**
-   - Place `dataManager.js` in the `js/` directory
-   - Place `vocab-app-html.html` and `vocab-app-english-html.html` in the project root
-   - Place `hebrew-json.json` and `vocab-english.json` in the `data/` directory
+   - Copy JSON files to the `data` directory
+   - Place HTML files in the root directory
 
 4. **Start the server:**
    ```bash
@@ -53,10 +53,12 @@ psychometric-dict-project/
 ## How it Works
 
 ### Data Storage
-Instead of storing data in localStorage, the application now:
-1. Loads vocabulary data from JSON files in the `data` directory
-2. Keeps a cache of the data in memory for performance
-3. Provides export functionality to save changes as JSON files
+The application now uses browser localStorage for data persistence:
+1. On first load, the vocabulary data is loaded from JSON files in the `data` directory
+2. All changes are automatically saved to localStorage
+3. Data persists between sessions until you clear your browser data or manually reset
+4. Each language has its own localStorage key (vocab-hebrew-data and vocab-english-data)
+5. You can still export your data as JSON files for backup or sharing
 
 ### Server
 The FastAPI server:
@@ -65,36 +67,38 @@ The FastAPI server:
 3. Provides routes for each app
 
 ### User Interface
-The user interface remains largely the same:
+The user interface allows you to:
 - Search and filter vocabulary
 - Add, edit and remove words
 - Mark words as known, unknown, or uncertain
 - Use flashcard mode for learning
 - Export and import data
+- Reset data to the initial state
 
-## Data Migration
-This project has been migrated from using localStorage to using JSON files for data storage. The main changes are:
+## Data Persistence
+This project now uses localStorage for data persistence. The main benefits are:
 
-1. Added a `dataManager.js` module that handles:
-   - Loading data from JSON files
-   - Caching data in memory
-   - Exporting data to JSON files
-
-2. Modified HTML files to:
-   - Remove embedded initial data
-   - Use the dataManager module
-   - Add loading and error states
-
-3. Moved vocabulary data to external JSON files:
-   - `hebrew-json.json`
-   - `vocab-english.json`
+1. **Automatic saving**: All changes are saved automatically to your browser's localStorage
+2. **Offline support**: The app works completely offline after initial loading
+3. **Session persistence**: Your data persists between browser sessions
+4. **No server-side storage needed**: Simplifies the architecture
+5. **Privacy**: Your vocabulary data stays in your browser
 
 ## Customization
 To customize the vocabulary data, you can either:
-1. Edit the JSON files directly
-2. Use the app to add, edit, or remove words, and then export the data
+1. Edit the JSON files in the `data` directory for initial data
+2. Use the app to add, edit, or remove words, which will be saved to localStorage
+3. Export your customized data as JSON files
 
 ## Notes
-- The application will still work offline after initial loading
-- Changes are cached in memory but need to be exported to persist across sessions
-- For permanent server-side storage, you would need to implement the server-side storage API (commented out in server.py)
+- Clearing browser data will delete your vocabulary progress
+- Use the export feature regularly to back up your data
+- Each browser/device will have its own separate localStorage data
+- The localStorage storage limit is typically around 5MB per domain, which is more than enough for vocabulary lists
+
+## Troubleshooting
+- If you experience issues with data persistence, check that:
+  - Your browser supports localStorage (all modern browsers do)
+  - You have not disabled localStorage in your browser settings
+  - You are not in private/incognito browsing mode (localStorage may not persist)
+- If you need to clear your data and start fresh, use the "Reset Data" button in the app
